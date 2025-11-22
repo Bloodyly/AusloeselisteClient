@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Combined single FixedHeaderTableLayout; full-screen, internal 2D scroll/zoom -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableLayout
+        android:id="@+id/tableCombined"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scrollbars="horizontal|vertical"
+        android:fadeScrollbars="false"
+        app:fhtl_min_scale="0.5"
+        app:fhtl_max_scale="2.0" />
+
+</LinearLayout>
