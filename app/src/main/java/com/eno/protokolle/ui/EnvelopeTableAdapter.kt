@@ -33,6 +33,7 @@ class EnvelopeTableAdapter(
 
     private val rows: List<List<String>> = table.rows
     private val headerRow: List<String> = table.header.lastOrNull() ?: emptyList()
+    private val colWidthsChars: List<Int>? = table.colWidths
 
     // „echte“ Spaltenanzahl = Max aus Headerbreite und längster Datenzeile
     private val totalCols: Int = run {
@@ -105,6 +106,7 @@ class EnvelopeTableAdapter(
 
     /** misst die Spaltenbreite als max(Header, alle Zellen), inkl. Padding; leer -> Mindestbreite */
     private fun measureColumnPx(col: Int): Int {
+        colWidthsChars?.getOrNull(col)?.let { return measureWidthFromChars(it) }
         var maxPx = 0f
         // Header
         val h = headerRow.getOrNull(col).orEmpty()
@@ -117,6 +119,13 @@ class EnvelopeTableAdapter(
         // Padding addieren; Leer-Case abfangen
         val withPad = if (maxPx > 0f) maxPx + padH * 2 else minEmptyColPx.toFloat()
         return withPad.roundToInt()
+    }
+
+    private fun measureWidthFromChars(chars: Int): Int {
+        if (chars <= 0) return minEmptyColPx
+        val sample = "0".repeat(chars.coerceAtLeast(1))
+        val width = paint.measureText(sample)
+        return (width + padH * 2).roundToInt()
     }
 
     private fun headerText(t: String, w: Int): TextView =
