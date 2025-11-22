@@ -88,7 +88,9 @@ data class Grid(
     /** String-Keys im JSON → im Code nach Int mappen */
     @SerialName("columnsEditable") private val columnsEditableRaw: Map<String, String> = emptyMap(),
     /** Startindex der Quartalsspalten (0-basiert) oder null */
-    @SerialName("qStartCol") val qStartCol: Int? = null
+    @SerialName("qStartCol") val qStartCol: Int? = null,
+    /** optionale Vorgaben für Spaltenbreiten (Zeichenanzahl je Spalte, 0-basiert) */
+    @SerialName("colWidths") val colWidths: List<Int>? = null
 )   {
     /** Bequemer Zugriff als Int-Map */
     val columnsEditable: Map<Int, String> by lazy {
