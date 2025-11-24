@@ -51,7 +51,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    implementation("com.github.Bloodyly:FixedHeaderTableLayout:V0.0.6.1")
+    implementation("com.github.Bloodyly:FixedHeaderTableLayout:V0.0.6.3")
     implementation("com.google.android.material:material:<aktuell>")
     implementation("androidx.viewpager2:viewpager2:1.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
