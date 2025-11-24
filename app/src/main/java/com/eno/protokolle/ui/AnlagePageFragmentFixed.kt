@@ -42,7 +42,12 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
             anlage.hardware?.let { add(UiTableSection("Hardware", it)) }
         }
 
-        MultiSectionFixedTable(requireContext(), textSizeSp = 14f, rowHeightDp = 40, padHDp = 8)
-            .renderInto(table, sections)
+        MultiSectionFixedTable(
+            requireContext(),
+            textSizeSp = 14f,
+            rowHeightDp = 40,
+            padHDp = 8,
+            quarterProvider = { vm.selectedQuarter }
+        ).renderInto(table, sections)
     }
 }

@@ -4,6 +4,7 @@
 package com.eno.protokolle.ui
 
 import android.os.Bundle
+import android.view.View
 import android.widget.ImageButton
 import android.widget.Spinner
 import android.widget.TextView
@@ -18,7 +19,6 @@ import com.eno.protokolle.newmodel.ProtokollMapper
 import com.eno.protokolle.newmodel.UiAnlage
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
-import kotlinx.serialization.json.Json
 
 
 
@@ -33,6 +33,12 @@ class ProtokollActivity : AppCompatActivity(R.layout.layout_protokoll) {
     private lateinit var buttonEdit: ImageButton
     private lateinit var buttonMenu: ImageButton
     private lateinit var spinnerMelderTyp: Spinner
+    private lateinit var textFabMain: TextView
+    private lateinit var textQ1: TextView
+    private lateinit var textQ2: TextView
+    private lateinit var textQ3: TextView
+    private lateinit var textQ4: TextView
+    private lateinit var textDefect: TextView
     private lateinit var tabLayout: TabLayout
     private lateinit var pager: ViewPager2
 
@@ -44,6 +50,8 @@ class ProtokollActivity : AppCompatActivity(R.layout.layout_protokoll) {
         bindViews()
         // Wischen zwischen Tabs deaktivieren – nur Klick auf Tab erlaubt
         pager.isUserInputEnabled = false
+
+        setupQuarterSelection()
 
         // 1) Protokoll aus Storage laden (per EXTRA_VN oder "neueste")
         val key = intent.getStringExtra(EXTRA_VN)
@@ -88,6 +96,37 @@ class ProtokollActivity : AppCompatActivity(R.layout.layout_protokoll) {
         spinnerMelderTyp = findViewById(R.id.spinnerMelderTyp)
         tabLayout = findViewById(R.id.tabLayoutAnlagen)
         pager = findViewById(R.id.pagerAnlagen)
+        textFabMain = findViewById(R.id.textFabMain)
+        textQ1 = findViewById(R.id.textQ1)
+        textQ2 = findViewById(R.id.textQ2)
+        textQ3 = findViewById(R.id.textQ3)
+        textQ4 = findViewById(R.id.textQ4)
+        textDefect = findViewById(R.id.textDefect)
+    }
+
+    private fun setupQuarterSelection() {
+        vm.selectedQuarter = textFabMain.text.toString()
+
+        fun hideOptions() {
+            listOf(textQ1, textQ2, textQ3, textQ4, textDefect).forEach {
+                it.visibility = View.INVISIBLE
+            }
+        }
+
+        fun selectQuarter(label: String) {
+            vm.selectedQuarter = label
+            textFabMain.text = label
+            hideOptions()
+        }
+
+        textFabMain.setOnClickListener {
+            val newVisibility = if (textQ1.visibility == View.VISIBLE) View.INVISIBLE else View.VISIBLE
+            listOf(textQ1, textQ2, textQ3, textQ4, textDefect).forEach { it.visibility = newVisibility }
+        }
+
+        listOf(textQ1, textQ2, textQ3, textQ4, textDefect).forEach { tv ->
+            tv.setOnClickListener { selectQuarter(tv.text.toString()) }
+        }
     }
 
     private fun setupPager() {

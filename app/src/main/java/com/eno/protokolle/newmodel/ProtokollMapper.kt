@@ -15,13 +15,14 @@ object ProtokollMapper {
 
         val uiAnlagen = env.protokoll.anlagen.mapNotNull { anlage ->
             val melderTable = anlage.melder?.let { t ->
-                val dense = t.grid.asDenseBodyStrings()
+                val dense = t.grid.asDenseBody(defaultType = "NotInUse")
                 val editors = ProtokollCodec.run { t.grid.columnsEditableAsIntMap() }
-                val colWidths = t.grid.colWidths ?: defaultMelderWidths(pType, t.grid)
+                val colWidths = t.grid.colWidths ?: ColumnWidthDefinitions.melderWidths(pType, t.grid.colCount)
                 UiTable(
                     header = t.head?.rows ?: emptyList(),
                     spans  = t.head?.spans,
-                    rows   = dense,
+                    rows   = dense.values,
+                    cellTypes = dense.types,
                     editors = editors,
                     qStartCol = t.grid.qStartCol,       // NEU
                     itemsEditable = t.itemsEditable,    // NEU
@@ -30,18 +31,20 @@ object ProtokollMapper {
             } ?: return@mapNotNull null // ohne Melder-Tabelle keine sinnvolle Anlage
 
             val hwTable = anlage.hardware?.let { hw ->
-                val dense = hw.grid.asDenseBodyStrings()
+                val dense = hw.grid.asDenseBody(defaultType = "NotInUse")
                 val editors = ProtokollCodec.run {
                     hw.grid.columnsEditableAsIntMap(defaultKind = ProtokollCodec.EditKind.string)
                 }
+                val colWidths = hw.grid.colWidths ?: ColumnWidthDefinitions.hardwareWidths(pType, hw.grid.colCount)
                 UiTable(
                     header = hw.head?.rows ?: emptyList(),
                     spans  = hw.head?.spans,
-                    rows   = dense,
+                    rows   = dense.values,
+                    cellTypes = dense.types,
                     editors = editors,
                     qStartCol = hw.grid.qStartCol,      // NEU
                     itemsEditable = hw.itemsEditable,   // NEU
-                    colWidths = hw.grid.colWidths
+                    colWidths = colWidths
                 )
             }
 
@@ -62,16 +65,4 @@ object ProtokollMapper {
         )
     }
 
-    private fun defaultMelderWidths(pType: String, grid: Grid): List<Int>? {
-        if (!pType.equals("BMA", ignoreCase = true)) return null
-        if (grid.colCount <= 0) return null
-        return MutableList(grid.colCount) { idx ->
-            when (idx) {
-                0 -> 4 // Melder Gruppe
-                1 -> 2 // Anzahl
-                2 -> 6 // Art
-                else -> 2 // restliche Quartalsspalten
-            }
-        }
-    }
 }

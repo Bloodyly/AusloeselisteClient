@@ -7,6 +7,7 @@ data class UiTable(
     val header: List<List<String>>,
     val spans: List<Span>?,
     val rows: List<List<String>>,
+    val cellTypes: List<List<String?>>?,
     val editors: Map<Int, ProtokollCodec.EditKind>,
     val qStartCol: Int?,           // NEU: Grenze zwischen Descriptor und Quartal
     val itemsEditable: Boolean,    // NEU: aus Server-Meta

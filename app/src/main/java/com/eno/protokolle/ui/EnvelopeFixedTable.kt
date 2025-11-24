@@ -14,6 +14,7 @@ import com.eno.protokolle.newmodel.UiTable
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderSubTableLayout
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableLayout
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableRow
+import androidx.core.content.ContextCompat
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -29,7 +30,8 @@ class EnvelopeFixedTable(
     private val ctx: Context,
     private val textSizeSp: Float = 14f,
     rowHeightDp: Int = 40,
-    private val padHDp: Int = 8
+    private val padHDp: Int = 8,
+    private val quarterProvider: () -> String = { "" }
 ) {
 
     // DP → PX
@@ -41,6 +43,8 @@ class EnvelopeFixedTable(
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textSize = textSizeSp * (if (dm.scaledDensity > 0) dm.scaledDensity else 1f)
     }
+    private val placeholderColor = ContextCompat.getColor(ctx, android.R.color.darker_gray)
+    private val textColor = ContextCompat.getColor(ctx, android.R.color.black)
 
     fun renderInto(container: FixedHeaderTableLayout, table: UiTable) {
         container.removeAllViews()
@@ -83,8 +87,9 @@ class EnvelopeFixedTable(
         for (r in bodyRows.indices) {
             val tr = FixedHeaderTableRow(ctx)
             for (c in 1 until totalCols) {
-                val t = bodyRows[r].getOrNull(c).orEmpty()
-                tr.addView(makeBodyCell(t, colWidthsPx[c]))
+                val value = bodyRows[r].getOrNull(c).orEmpty()
+                val type = table.cellTypes?.getOrNull(r)?.getOrNull(c)
+                tr.addView(makeBodyCell(value, type, colWidthsPx[c]))
             }
             mainTable.addView(tr)
         }
@@ -118,8 +123,32 @@ class EnvelopeFixedTable(
         gravity = Gravity.CENTER_VERTICAL
     }
 
-    private fun makeBodyCell(text: String, w: Int) = baseCell(text, w).apply {
-        setBackgroundResource(R.drawable.bg_cell_black)
+    private fun makeBodyCell(value: String, type: String?, w: Int): TextView {
+        val notInUse = type.equals("NotInUse", ignoreCase = true)
+        val editable = type != null && !notInUse
+        val placeholder = if (!type.isNullOrBlank() && !notInUse) type else ""
+        val hasValue = value.isNotBlank()
+        val displayText = when {
+            hasValue -> value
+            placeholder.isNotBlank() -> placeholder
+            else -> ""
+        }
+        val usePlaceholderColor = !hasValue && placeholder.isNotBlank()
+
+        return baseCell(displayText, w).apply {
+            val initialBg = when {
+                notInUse -> R.drawable.bg_cell_not_in_use
+                hasValue -> R.drawable.bg_cell_selected
+                else -> R.drawable.bg_cell_black
+            }
+            setBackgroundResource(initialBg)
+            setTextColor(if (usePlaceholderColor) placeholderColor else textColor)
+
+            if (editable) {
+                tag = BodyCellState(placeholder = placeholder, filled = hasValue)
+                setOnClickListener { toggleQuarterValue(this) }
+            }
+        }
     }
 
     private fun baseCell(text: String, width: Int) =
@@ -154,10 +183,37 @@ class EnvelopeFixedTable(
         table.header.forEach { row ->
             maxPx = max(maxPx, paint.measureText(row.getOrNull(col).orEmpty()))
         }
-        table.rows.forEach { row ->
+        table.rows.forEachIndexed { rowIndex, row ->
             maxPx = max(maxPx, paint.measureText(row.getOrNull(col).orEmpty()))
+            val typeText = table.cellTypes?.getOrNull(rowIndex)?.getOrNull(col)
+            if (!typeText.isNullOrBlank()) {
+                maxPx = max(maxPx, paint.measureText(typeText))
+            }
         }
         val withPad = if (maxPx > 0f) maxPx + padH * 2 else minEmptyColPx.toFloat()
         return withPad.roundToInt()
     }
+
+    private fun toggleQuarterValue(tv: TextView) {
+        val state = tv.tag as? BodyCellState ?: return
+        if (state.filled) {
+            tv.text = state.placeholder
+            tv.setTextColor(if (state.placeholder.isNotBlank()) placeholderColor else textColor)
+            tv.setBackgroundResource(R.drawable.bg_cell_black)
+            state.filled = false
+        } else {
+            val q = quarterProvider()
+            if (q.isNotBlank()) {
+                tv.text = q
+                tv.setTextColor(textColor)
+                tv.setBackgroundResource(R.drawable.bg_cell_selected)
+                state.filled = true
+            }
+        }
+    }
+
+    private data class BodyCellState(
+        val placeholder: String,
+        var filled: Boolean
+    )
 }

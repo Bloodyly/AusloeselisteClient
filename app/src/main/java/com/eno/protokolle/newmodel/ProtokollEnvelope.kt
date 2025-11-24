@@ -100,26 +100,60 @@ data class Grid(
         columnsEditableRaw.mapNotNull { (k, v) -> k.toIntOrNull()?.let { it to v } }.toMap()
     }
 
-    /** Dichtes String-Body (falls UI Strings erwartet) */
-    fun asDenseBodyStrings(): List<List<String>> =
-        body.map { row ->
-            row.map { cell ->
-                when (val v = cell.v) {
-                    null, is JsonNull -> ""
-                    is JsonPrimitive -> when {
-                        v.isString -> v.content
-                        v.booleanOrNull != null -> v.boolean.toString()
-                        v.longOrNull != null -> v.long.toString()
-                        v.doubleOrNull != null -> v.double.toString()
-                        else -> v.toString()
-                    }
-                    else -> v.toString()
+    data class DenseBody(
+        val values: List<List<String>>,
+        val types: List<List<String?>>
+    )
+
+    /** Dichtes Body-Matrix inkl. Melder-Typen. Fehlende Zellen erhalten optional einen Default-Typ. */
+    fun asDenseBody(defaultType: String? = null): DenseBody {
+        if (rowCount <= 0 || colCount <= 0) return DenseBody(emptyList(), emptyList())
+
+        val values = MutableList(rowCount) { MutableList(colCount) { "" } }
+        val types = MutableList(rowCount) { MutableList<String?>(colCount) { null } }
+        val present = MutableList(rowCount) { MutableList(colCount) { false } }
+
+        body.forEach { row ->
+            row.forEach { cell ->
+                val r = cell.r
+                val c = cell.c
+                if (r in 0 until rowCount && c in 0 until colCount) {
+                    values[r][c] = cell.v.toDisplayString()
+                    types[r][c] = cell.t?.toDisplayString()
+                    present[r][c] = true
                 }
             }
         }
 
+        if (defaultType != null) {
+            for (r in 0 until rowCount) {
+                for (c in 0 until colCount) {
+                    if (!present[r][c]) types[r][c] = defaultType
+                }
+            }
+        }
+
+        return DenseBody(values.map { it.toList() }, types.map { it.toList() })
+    }
+
+    /** Dichtes String-Body (falls UI Strings erwartet) */
+    fun asDenseBodyStrings(defaultType: String? = null): List<List<String>> =
+        asDenseBody(defaultType).values
+
     fun isQuarterCol(c: Int): Boolean = qStartCol?.let { c >= it } ?: false
     fun isEditableCol(c: Int): Boolean = columnsEditable.containsKey(c)
+}
+
+private fun JsonElement?.toDisplayString(): String = when (val v = this) {
+    null, is JsonNull -> ""
+    is JsonPrimitive -> when {
+        v.isString -> v.content
+        v.booleanOrNull != null -> v.boolean.toString()
+        v.longOrNull != null -> v.long.toString()
+        v.doubleOrNull != null -> v.double.toString()
+        else -> v.toString()
+    }
+    else -> v.toString()
 }
 
 @Serializable
