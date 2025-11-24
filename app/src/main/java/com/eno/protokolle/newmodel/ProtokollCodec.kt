@@ -1,3 +1,6 @@
+/**
+ * JSON-Codecs zum Serialisieren und Deserialisieren der Protokolldaten inklusive Validierung.
+ */
 package com.eno.protokolle.newmodel
 
 import kotlinx.serialization.json.*

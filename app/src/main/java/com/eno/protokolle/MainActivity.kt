@@ -1,3 +1,6 @@
+/**
+ * Start-Activity mit Navigation zu Protokoll-Download, Einstellungen und Debug-Ansicht.
+ */
 package com.eno.protokolle
 
 

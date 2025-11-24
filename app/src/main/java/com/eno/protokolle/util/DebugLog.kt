@@ -1,3 +1,6 @@
+/**
+ * Threadsafe In-Memory-Logger zum Sammeln von Debug-Meldungen für Anzeige und Export im UI.
+ */
 package com.eno.protokolle.util
 
 import java.text.SimpleDateFormat

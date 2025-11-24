@@ -1,3 +1,6 @@
+/**
+ * Dateiablage für Protokolle auf dem Gerät mit Lese-/Schreib-Helfern und Versionierungssupport.
+ */
 package com.eno.protokolle.network
 
 import android.content.Context

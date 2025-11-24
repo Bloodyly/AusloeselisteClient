@@ -1,4 +1,7 @@
 
+/**
+ * Renderer, der mehrere UiTable-Sektionen in einem gemeinsamen FixedHeaderTableLayout stapelt.
+ */
 package com.eno.protokolle.ui
 
 import android.content.Context

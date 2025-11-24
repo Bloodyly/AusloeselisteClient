@@ -1,3 +1,6 @@
+/**
+ * Einfache Intro-Activity, die beim Erststart eine Anleitung und die Zustimmung zur Nutzung einholt.
+ */
 package com.eno.protokolle.ui
 
 import android.app.AlertDialog

@@ -1,3 +1,6 @@
+/**
+ * DialogFragment zum Anzeigen des Downloadfortschritts und Triggern des Protokollabrufs.
+ */
 package com.eno.protokolle.ui
 
 import android.content.Intent
