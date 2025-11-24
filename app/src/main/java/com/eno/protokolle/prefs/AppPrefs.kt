@@ -1,4 +1,7 @@
 // AppPrefs.kt
+/**
+ * Zentrale SharedPreferences-Helfer für Server-URLs, Benutzerangaben und Debug-Flags.
+ */
 package com.eno.protokolle.prefs
 
 import android.content.Context

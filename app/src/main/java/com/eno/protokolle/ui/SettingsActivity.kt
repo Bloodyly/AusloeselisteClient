@@ -1,3 +1,6 @@
+/**
+ * Activity für die Pflege der App-Einstellungen einschließlich Serveradresse und Zugangsdaten.
+ */
 package com.eno.protokolle.ui
 
 import android.content.Intent

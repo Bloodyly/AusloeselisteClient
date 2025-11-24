@@ -1,3 +1,6 @@
+/**
+ * Datenmodell der heruntergeladenen Protokolle inklusive Anlagen, Meldern und Hardwaretabellen.
+ */
 package com.eno.protokolle.newmodel
 
 data class UiTable(

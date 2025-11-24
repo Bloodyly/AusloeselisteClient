@@ -1,3 +1,6 @@
+/**
+ * Activity zur Anzeige, Freigabe und Löschung der gesammelten Debug-Logs.
+ */
 package com.eno.protokolle
 
 import android.content.ClipData

@@ -1,3 +1,6 @@
+/**
+ * Alternativer Renderer für FixedHeaderTableLayout, der eine einzelne UiTable darstellt.
+ */
 package com.eno.protokolle.ui
 
 import android.content.Context
