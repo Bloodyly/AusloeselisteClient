@@ -9,4 +9,5 @@ import com.eno.protokolle.newmodel.ProtokollConstruct
 
 class ProtokollViewModel : ViewModel() {
     var construct: ProtokollConstruct? = null
+    var selectedQuarter: String = "Q1"
 }

@@ -15,6 +15,7 @@ import com.eno.protokolle.newmodel.UiTable
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderSubTableLayout
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableLayout
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableRow
+import androidx.core.content.ContextCompat
 import kotlin.math.max
 import kotlin.math.roundToInt
 
@@ -30,7 +31,8 @@ class MultiSectionFixedTable(
     private val ctx: Context,
     private val textSizeSp: Float = 14f,
     rowHeightDp: Int = 40,
-    private val padHDp: Int = 8
+    private val padHDp: Int = 8,
+    private val quarterProvider: () -> String = { "" }
 ) {
     private val dm = ctx.resources.displayMetrics
     private fun dp(v: Int) = (v * (if (dm.density > 0f) dm.density else 1f)).roundToInt()
@@ -40,6 +42,8 @@ class MultiSectionFixedTable(
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textSize = textSizeSp * (if (dm.scaledDensity > 0) dm.scaledDensity else 1f)
     }
+    private val placeholderColor = ContextCompat.getColor(ctx, android.R.color.darker_gray)
+    private val textColor = ContextCompat.getColor(ctx, android.R.color.black)
 
     fun renderInto(container: FixedHeaderTableLayout, sections: List<UiTableSection>) {
         require(sections.isNotEmpty()) { "sections must not be empty" }
@@ -55,6 +59,8 @@ class MultiSectionFixedTable(
 
         fun padRow(row: List<String>) =
             if (row.size >= totalCols) row else row + List(totalCols - row.size) { "" }
+        fun padTypeRow(row: List<String?>) =
+            if (row.size >= totalCols) row else row + List(totalCols - row.size) { null }
 
         val padded = sections.map { sec ->
             val h = sec.table.header.map(::padRow)
@@ -65,6 +71,7 @@ class MultiSectionFixedTable(
                     h,
                     sec.table.spans,
                     r,
+                    sec.table.cellTypes?.map(::padTypeRow),
                     sec.table.editors,
                     sec.table.qStartCol,
                     sec.table.itemsEditable,
@@ -114,12 +121,16 @@ class MultiSectionFixedTable(
             }
 
             // Data rows
-            for (r in sec.table.rows) {
+            for ((rowIndex, r) in sec.table.rows.withIndex()) {
+                val typeRow = sec.table.cellTypes?.getOrNull(rowIndex)
                 rowHd.addView(FixedHeaderTableRow(ctx).apply {
                     addView(makeRowHeaderCell(r[0], colWidthsPx[0]))
                 })
                 main.addView(FixedHeaderTableRow(ctx).apply {
-                    for (c in 1 until totalCols) addView(makeBodyCell(r[c], colWidthsPx[c]))
+                    for (c in 1 until totalCols) {
+                        val type = typeRow?.getOrNull(c)
+                        addView(makeBodyCell(r[c], type, colWidthsPx[c]))
+                    }
                 })
             }
 
@@ -146,8 +157,32 @@ class MultiSectionFixedTable(
     private fun makeRowHeaderCell(t: String, w: Int) = baseCell(t, w).apply {
         setBackgroundResource(R.drawable.bg_header_cell_black); gravity = Gravity.CENTER_VERTICAL
     }
-    private fun makeBodyCell(t: String, w: Int) = baseCell(t, w).apply {
-        setBackgroundResource(R.drawable.bg_cell_black)
+    private fun makeBodyCell(value: String, type: String?, w: Int): TextView {
+        val notInUse = type.equals("NotInUse", ignoreCase = true)
+        val editable = type != null && !notInUse
+        val placeholder = if (!type.isNullOrBlank() && !notInUse) type else ""
+        val hasValue = value.isNotBlank()
+        val displayText = when {
+            hasValue -> value
+            placeholder.isNotBlank() -> placeholder
+            else -> ""
+        }
+        val usePlaceholderColor = !hasValue && placeholder.isNotBlank()
+
+        return baseCell(displayText, w).apply {
+            val initialBg = when {
+                notInUse -> R.drawable.bg_cell_not_in_use
+                hasValue -> R.drawable.bg_cell_selected
+                else -> R.drawable.bg_cell_black
+            }
+            setBackgroundResource(initialBg)
+            setTextColor(if (usePlaceholderColor) placeholderColor else textColor)
+
+            if (editable) {
+                tag = BodyCellState(placeholder = placeholder, filled = hasValue)
+                setOnClickListener { toggleQuarterValue(this) }
+            }
+        }
     }
     private fun makeSectionHeaderCell(t: String, w: Int) = baseCell(t, w).apply {
         setBackgroundResource(R.drawable.bg_header_cell_black); gravity = Gravity.CENTER_VERTICAL
@@ -193,11 +228,38 @@ class MultiSectionFixedTable(
             sec.table.header.forEach { row ->
                 maxPx = max(maxPx, paint.measureText(row.getOrNull(col).orEmpty()))
             }
-            sec.table.rows.forEach { row ->
+            sec.table.rows.forEachIndexed { rowIndex, row ->
                 maxPx = max(maxPx, paint.measureText(row.getOrNull(col).orEmpty()))
+                val typeText = sec.table.cellTypes?.getOrNull(rowIndex)?.getOrNull(col)
+                if (!typeText.isNullOrBlank()) {
+                    maxPx = max(maxPx, paint.measureText(typeText))
+                }
             }
         }
         val withPad = if (maxPx > 0f) maxPx + padH * 2 else minEmptyColPx.toFloat()
         return withPad.roundToInt()
     }
+
+    private fun toggleQuarterValue(tv: TextView) {
+        val state = tv.tag as? BodyCellState ?: return
+        if (state.filled) {
+            tv.text = state.placeholder
+            tv.setTextColor(if (state.placeholder.isNotBlank()) placeholderColor else textColor)
+            tv.setBackgroundResource(R.drawable.bg_cell_black)
+            state.filled = false
+        } else {
+            val q = quarterProvider()
+            if (q.isNotBlank()) {
+                tv.text = q
+                tv.setTextColor(textColor)
+                tv.setBackgroundResource(R.drawable.bg_cell_selected)
+                state.filled = true
+            }
+        }
+    }
+
+    private data class BodyCellState(
+        val placeholder: String,
+        var filled: Boolean
+    )
 }
