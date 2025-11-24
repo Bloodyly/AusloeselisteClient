@@ -9,8 +9,6 @@
     <com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableContainer
         android:id="@+id/tableContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="horizontal|vertical"
-        android:fadeScrollbars="false" />
+        android:layout_height="match_parent" />
 
 </LinearLayout>

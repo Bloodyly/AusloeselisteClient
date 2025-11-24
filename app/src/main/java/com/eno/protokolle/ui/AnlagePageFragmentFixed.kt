@@ -34,8 +34,8 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
         val table = FixedHeaderTableLayout(requireContext()).apply {
             setMinScale(0.5f)
             setMaxScale(2.0f)
-            isHorizontalScrollBarEnabled = true
-            isVerticalScrollBarEnabled = true
+            isHorizontalScrollBarEnabled = false
+            isVerticalScrollBarEnabled = false
             isScrollbarFadingEnabled = false
         }
         container.addSubTable(table)
