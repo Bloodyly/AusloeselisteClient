@@ -1,3 +1,6 @@
+/**
+ * Host-Activity für die Anzeige eines geladenen Protokolls über ViewPager und Fragmente.
+ */
 package com.eno.protokolle.ui
 
 import android.os.Bundle

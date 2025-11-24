@@ -1,4 +1,6 @@
-// src/main/java/com/eno/protokolle/network/Receive_and_Decode.kt
+/**
+ * Netzwerk-Helfer zum Abrufen, Validieren und Entschlüsseln der Protokolldateien inklusive Caching.
+ */
 package com.eno.protokolle.network
 
 import android.content.Context

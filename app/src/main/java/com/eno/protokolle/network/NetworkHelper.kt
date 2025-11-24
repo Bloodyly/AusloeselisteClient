@@ -1,3 +1,6 @@
+/**
+ * Utility-Klasse für Netzwerk- und HTTPS-Konfigurationen wie Debug-Bypass und Zertifikatsprüfung.
+ */
 package com.eno.protokolle.network
 
 import android.util.Base64

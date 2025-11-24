@@ -6,13 +6,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableLayout
-        android:id="@+id/tableCombined"
+    <com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableContainer
+        android:id="@+id/tableContainer"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scrollbars="horizontal|vertical"
-        android:fadeScrollbars="false"
-        app:fhtl_min_scale="0.5"
-        app:fhtl_max_scale="2.0" />
+        android:layout_height="match_parent" />
 
 </LinearLayout>

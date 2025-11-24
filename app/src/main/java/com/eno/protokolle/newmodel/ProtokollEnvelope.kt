@@ -1,3 +1,6 @@
+/**
+ * Transporthülle für Protokolle mit Metadaten und Nutzlast, bevor sie ins Domänenmodell gemappt wird.
+ */
 package com.eno.protokolle.newmodel
 
 import kotlinx.serialization.SerialName

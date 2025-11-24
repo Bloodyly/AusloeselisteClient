@@ -1,3 +1,6 @@
+/**
+ * Fragment zur Anzeige einer Anlageseite mit Melder- und Hardware-Tabellen im FixedHeader-Layout.
+ */
 package com.eno.protokolle.ui
 
 import android.os.Bundle
@@ -6,6 +9,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.eno.protokolle.R
+import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableContainer
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableLayout
 
 class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
@@ -26,7 +30,15 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
         val index = requireArguments().getInt(KEY_INDEX)
         val anlage = construct.anlagen.getOrNull(index) ?: return
 
-        val table = view.findViewById<FixedHeaderTableLayout>(R.id.tableCombined)
+        val container = view.findViewById<FixedHeaderTableContainer>(R.id.tableContainer)
+        val table = FixedHeaderTableLayout(requireContext()).apply {
+            setMinScale(0.5f)
+            setMaxScale(2.0f)
+            isHorizontalScrollBarEnabled = false
+            isVerticalScrollBarEnabled = false
+            isScrollbarFadingEnabled = false
+        }
+        container.addSubTable(table)
 
         val sections = buildList {
             add(UiTableSection("Melder", anlage.melder))

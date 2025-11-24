@@ -1,3 +1,6 @@
+/**
+ * FrameLayout mit einfachem Pinch-Zoom zur Nutzung in älteren Tabellen-Screens.
+ */
 package com.eno.protokolle.ui
 
 import android.content.Context

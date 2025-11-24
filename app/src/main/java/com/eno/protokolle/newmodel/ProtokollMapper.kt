@@ -1,3 +1,6 @@
+/**
+ * Mapper, der rohe Envelope-Daten in UI-taugliche Tabellenstrukturen und Domänenobjekte überführt.
+ */
 package com.eno.protokolle.newmodel
 
 object ProtokollMapper {
