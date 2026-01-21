@@ -11,6 +11,7 @@ import androidx.fragment.app.activityViewModels
 import com.eno.protokolle.R
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableContainer
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableLayout
+import com.eno.protokolle.newmodel.UiTable
 
 class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
 
@@ -23,6 +24,7 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
 
     private val vm: ProtokollViewModel by activityViewModels()
 
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -31,23 +33,59 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
         val anlage = construct.anlagen.getOrNull(index) ?: return
 
         val container = view.findViewById<FixedHeaderTableContainer>(R.id.tableContainer)
-        val table = FixedHeaderTableLayout(requireContext()).apply {
-            setMinScale(0.5f)
-            setMaxScale(2.0f)
-        }
-        container.addSubTable(table)
 
-        val sections = buildList {
-            add(UiTableSection("Melder", anlage.melder))
-            anlage.hardware?.let { add(UiTableSection("Hardware", it)) }
+        // Helper: Spaltenanzahl bestimmen
+        fun colCountOf(t: UiTable): Int {
+            val h = t.header.maxOfOrNull { it.size } ?: 0
+            val r = t.rows.maxOfOrNull { it.size } ?: 0
+            return maxOf(h, r).coerceAtLeast(1)
         }
 
-        MultiSectionFixedTable(
+        // Breiten-Regeln (in "Zeichen" = colWidths-Hints)
+        fun melderColWidths(cols: Int): List<Int> =
+            List(cols) { c ->
+                when (c) {
+                    0 -> 18   // Spalte 1: groß/fest (z.B. für "Meldertyp")
+                    1 -> 14   // Spalte 2: groß/fest
+                    else -> 3 // rest: 3 Zeichen
+                }
+            }
+
+        fun hardwareColWidths(cols: Int): List<Int> =
+            List(cols) { 10 } // jede Spalte ~10 Zeichen
+
+        val renderer = MultiSectionFixedTable(
             requireContext(),
             textSizeSp = 14f,
             rowHeightDp = 40,
             padHDp = 8,
             quarterProvider = { vm.selectedQuarter }
-        ).renderInto(table, sections)
+        )
+
+        // 1) Melder/Auslöseliste als eigene Tabelle
+        val melderTable = FixedHeaderTableLayout(requireContext()).apply {
+            setMinScale(0.5f)
+            setMaxScale(2.0f)
+        }
+
+        val melderCols = colCountOf(anlage.melder)
+        val melderUi = anlage.melder.copy(colWidths = melderColWidths(melderCols))
+
+        container.addSubTable(melderTable)
+        renderer.renderInto(melderTable, listOf(UiTableSection(null, melderUi)))
+
+        // 2) Hardware als eigene Tabelle (unabhängige Breiten)
+        anlage.hardware?.let { hw ->
+            val hardwareTable = FixedHeaderTableLayout(requireContext()).apply {
+                setMinScale(0.5f)
+                setMaxScale(2.0f)
+            }
+
+            val hwCols = colCountOf(hw)
+            val hwUi = hw.copy(colWidths = hardwareColWidths(hwCols))
+
+            container.addSubTable(hardwareTable)
+            renderer.renderInto(hardwareTable, listOf(UiTableSection(null, hwUi)))
+        }
     }
 }

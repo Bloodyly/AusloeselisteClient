@@ -1,4 +1,3 @@
-
 /**
  * Renderer, der mehrere UiTable-Sektionen in einem gemeinsamen FixedHeaderTableLayout stapelt.
  */
@@ -10,13 +9,12 @@ import android.text.TextUtils
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import com.eno.protokolle.R
 import com.eno.protokolle.newmodel.UiTable
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderSubTableLayout
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableLayout
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableRow
-import androidx.core.content.ContextCompat
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 data class UiTableSection(val title: String?, val table: UiTable)
@@ -80,6 +78,7 @@ class MultiSectionFixedTable(
             )
         }
 
+        // Column widths computed once (char-hints supported via UiTable.colWidths)
         val colWidthsPx = computeColumnWidthsPx(padded, totalCols)
 
         // 2) Subtables
@@ -113,19 +112,21 @@ class MultiSectionFixedTable(
                 rowHd.addView(FixedHeaderTableRow(ctx).apply {
                     addView(makeSectionHeaderCell(title, colWidthsPx[0]))
                 })
-                // Main title row (spans visually across columns by filling cells)
+                // Main title row (fill cells)
                 main.addView(FixedHeaderTableRow(ctx).apply {
-                    addView(makeSectionHeaderBodyCell(title, colWidthsPx.getOrElse(1) { minEmptyColPx })) // first data column (c=1)
+                    addView(makeSectionHeaderBodyCell(title, colWidthsPx.getOrElse(1) { minEmptyColPx }))
                     for (c in 2 until totalCols) addView(makeSectionHeaderBodyCell("", colWidthsPx[c]))
                 })
             }
 
-            // Data rows
-            for ((rowIndex, r) in sec.table.rows.withIndex()) {
-                val typeRow = sec.table.cellTypes?.getOrNull(rowIndex)
+            val types = sec.table.cellTypes
+            sec.table.rows.forEachIndexed { rIdx, r ->
+                val typeRow = types?.getOrNull(rIdx)
+                // Row header
                 rowHd.addView(FixedHeaderTableRow(ctx).apply {
-                    addView(makeRowHeaderCell(r[0], colWidthsPx[0]))
+                    addView(makeHeaderCell(r[0], colWidthsPx[0]))
                 })
+                // Body row
                 main.addView(FixedHeaderTableRow(ctx).apply {
                     for (c in 1 until totalCols) {
                         val type = typeRow?.getOrNull(c)
@@ -143,71 +144,11 @@ class MultiSectionFixedTable(
             }
         }
 
-        // 5) Add in required order
+        // 5) Add in required order: (main, colHd, rowHd, corner)
+// Add in required order: (main, colHd, rowHd, corner)
         container.addViews(main, colHd, rowHd, corner)
-    }
 
-    // ---- cell factories ----
-    private fun makeHeaderCell(t: String, w: Int) = baseCell(t, w).apply {
-        setBackgroundResource(R.drawable.bg_header_cell_black); gravity = Gravity.CENTER_VERTICAL
     }
-    private fun makeCornerCell(t: String, w: Int) = baseCell(t, w).apply {
-        setBackgroundResource(R.drawable.bg_header_cell_black); gravity = Gravity.CENTER_VERTICAL
-    }
-    private fun makeRowHeaderCell(t: String, w: Int) = baseCell(t, w).apply {
-        setBackgroundResource(R.drawable.bg_header_cell_black); gravity = Gravity.CENTER_VERTICAL
-    }
-    private fun makeBodyCell(value: String, type: String?, w: Int): TextView {
-        val notInUse = type.equals("NotInUse", ignoreCase = true)
-        val editable = type != null && !notInUse
-        val placeholder = if (!type.isNullOrBlank() && !notInUse) type else ""
-        val hasValue = value.isNotBlank()
-        val displayText = when {
-            hasValue -> value
-            placeholder.isNotBlank() -> placeholder
-            else -> ""
-        }
-        val usePlaceholderColor = !hasValue && placeholder.isNotBlank()
-
-        return baseCell(displayText, w).apply {
-            val initialBg = when {
-                notInUse -> R.drawable.bg_cell_not_in_use
-                hasValue -> R.drawable.bg_cell_selected
-                else -> R.drawable.bg_cell_black
-            }
-            setBackgroundResource(initialBg)
-            setTextColor(if (usePlaceholderColor) placeholderColor else textColor)
-
-            if (editable) {
-                tag = BodyCellState(placeholder = placeholder, filled = hasValue)
-                setOnClickListener { toggleQuarterValue(this) }
-            }
-        }
-    }
-    private fun makeSectionHeaderCell(t: String, w: Int) = baseCell(t, w).apply {
-        setBackgroundResource(R.drawable.bg_header_cell_black); gravity = Gravity.CENTER_VERTICAL
-    }
-    private fun makeSectionHeaderBodyCell(t: String, w: Int) = baseCell(t, w).apply {
-        setBackgroundResource(R.drawable.bg_header_cell_black)
-    }
-    private fun makeGapCell(w: Int) = baseCell("", w).apply {
-        setBackgroundResource(android.R.color.transparent)
-        minHeight = dp(8)
-    }
-
-    private fun baseCell(text: String, width: Int) =
-        TextView(ctx).apply {
-            this.text = text
-            textSize = textSizeSp
-            setPadding(padH, 0, padH, 0)
-            ellipsize = TextUtils.TruncateAt.END
-            maxLines = 1
-            minHeight = rowH
-            layoutParams = ViewGroup.LayoutParams(
-                width,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-        }
 
     private fun computeColumnWidthsPx(sections: List<UiTableSection>, totalCols: Int): List<Int> =
         List(totalCols) { col ->
@@ -225,41 +166,66 @@ class MultiSectionFixedTable(
     private fun measureColumnPx(sections: List<UiTableSection>, col: Int): Int {
         var maxPx = 0f
         sections.forEach { sec ->
-            sec.table.header.forEach { row ->
-                maxPx = max(maxPx, paint.measureText(row.getOrNull(col).orEmpty()))
-            }
-            sec.table.rows.forEachIndexed { rowIndex, row ->
-                maxPx = max(maxPx, paint.measureText(row.getOrNull(col).orEmpty()))
-                val typeText = sec.table.cellTypes?.getOrNull(rowIndex)?.getOrNull(col)
-                if (!typeText.isNullOrBlank()) {
-                    maxPx = max(maxPx, paint.measureText(typeText))
+            val rows = sec.table.header + sec.table.rows
+            rows.forEach { row ->
+                val text = row.getOrNull(col).orEmpty()
+                if (text.isNotEmpty()) {
+                    maxPx = maxOf(maxPx, paint.measureText(text))
                 }
             }
         }
-        val withPad = if (maxPx > 0f) maxPx + padH * 2 else minEmptyColPx.toFloat()
-        return withPad.roundToInt()
+        val w = (maxPx + padH * 2).roundToInt()
+        return if (w <= 0) minEmptyColPx else w
     }
 
-    private fun toggleQuarterValue(tv: TextView) {
-        val state = tv.tag as? BodyCellState ?: return
-        if (state.filled) {
-            tv.text = state.placeholder
-            tv.setTextColor(if (state.placeholder.isNotBlank()) placeholderColor else textColor)
-            tv.setBackgroundResource(R.drawable.bg_cell_black)
-            state.filled = false
-        } else {
-            val q = quarterProvider()
-            if (q.isNotBlank()) {
-                tv.text = q
-                tv.setTextColor(textColor)
-                tv.setBackgroundResource(R.drawable.bg_cell_selected)
-                state.filled = true
-            }
+    private fun baseCell(widthPx: Int): TextView =
+        TextView(ctx).apply {
+            layoutParams = ViewGroup.LayoutParams(widthPx, rowH)
+            gravity = Gravity.CENTER
+            setPadding(padH, 0, padH, 0)
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, textSizeSp)
+            setSingleLine()
+            ellipsize = TextUtils.TruncateAt.END
         }
-    }
 
-    private data class BodyCellState(
-        val placeholder: String,
-        var filled: Boolean
-    )
+    private fun makeHeaderCell(text: String, widthPx: Int): TextView =
+        baseCell(widthPx).apply {
+            this.text = text
+            setTextColor(textColor)
+            setBackgroundResource(R.drawable.bg_header_cell_black)
+        }
+
+    private fun makeCornerCell(text: String, widthPx: Int): TextView =
+        baseCell(widthPx).apply {
+            this.text = text
+            setTextColor(textColor)
+            setBackgroundResource(R.drawable.bg_header_cell_black)
+        }
+
+    private fun makeBodyCell(text: String, type: String?, widthPx: Int): TextView =
+        baseCell(widthPx).apply {
+            this.text = text
+            setTextColor(textColor)
+            setBackgroundResource(R.drawable.bg_header_cell_black)
+        }
+
+    private fun makeGapCell(widthPx: Int): TextView =
+        baseCell(widthPx).apply {
+            text = ""
+            setBackgroundResource(R.drawable.bg_header_cell_black)
+        }
+
+    private fun makeSectionHeaderCell(text: String, widthPx: Int): TextView =
+        baseCell(widthPx).apply {
+            this.text = text
+            setTextColor(textColor)
+            setBackgroundResource(R.drawable.bg_header_cell_black)
+        }
+
+    private fun makeSectionHeaderBodyCell(text: String, widthPx: Int): TextView =
+        baseCell(widthPx).apply {
+            this.text = text
+            setTextColor(textColor)
+            setBackgroundResource(R.drawable.bg_header_cell_black)
+        }
 }
