@@ -4,10 +4,12 @@
 package com.eno.protokolle.ui
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Paint
 import android.text.TextUtils
 import android.view.Gravity
 import android.view.ViewGroup
+import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
 import com.eno.protokolle.R
@@ -202,12 +204,68 @@ class MultiSectionFixedTable(
             setBackgroundResource(R.drawable.bg_header_cell_black)
         }
 
-    private fun makeBodyCell(text: String, type: String?, widthPx: Int): TextView =
-        baseCell(widthPx).apply {
-            this.text = text
-            setTextColor(textColor)
-            setBackgroundResource(R.drawable.bg_header_cell_black)
+    private fun makeBodyCell(text: String, type: String?, widthPx: Int): FrameLayout {
+        val cell = FrameLayout(ctx).apply {
+            layoutParams = ViewGroup.LayoutParams(widthPx, rowH)
         }
+        val valueText = baseCell(widthPx).apply {
+            setTextColor(textColor)
+            setSingleLine()
+            ellipsize = TextUtils.TruncateAt.END
+            setPadding(padH, 0, padH, 0)
+            gravity = Gravity.CENTER
+        }
+        val hintText = baseCell(widthPx).apply {
+            setTextColor(placeholderColor)
+            setTextSize(android.util.TypedValue.COMPLEX_UNIT_SP, textSizeSp * 0.75f)
+            setSingleLine()
+            ellipsize = TextUtils.TruncateAt.END
+            setPadding(padH, 0, padH, 0)
+            gravity = Gravity.CENTER
+        }
+
+        val hasType = !type.isNullOrBlank()
+        val hasValue = text.isNotBlank()
+
+        when {
+            hasValue -> {
+                valueText.text = text
+                hintText.visibility = TextView.GONE
+                cell.setBackgroundResource(R.drawable.table_cell_background)
+            }
+            hasType -> {
+                valueText.text = ""
+                hintText.text = type
+                hintText.visibility = TextView.VISIBLE
+                cell.setBackgroundResource(R.drawable.table_cell_background)
+            }
+            else -> {
+                valueText.text = "-"
+                hintText.visibility = TextView.GONE
+                cell.setBackgroundColor(Color.WHITE)
+            }
+        }
+
+        if (hasType) {
+            cell.isClickable = true
+            cell.isFocusable = true
+            cell.setOnClickListener {
+                val currentValue = valueText.text?.toString().orEmpty()
+                if (currentValue.isNotBlank()) {
+                    valueText.text = ""
+                    hintText.text = type
+                    hintText.visibility = TextView.VISIBLE
+                } else {
+                    valueText.text = quarterProvider()
+                    hintText.visibility = TextView.GONE
+                }
+            }
+        }
+
+        cell.addView(valueText)
+        cell.addView(hintText)
+        return cell
+    }
 
     private fun makeGapCell(widthPx: Int): TextView =
         baseCell(widthPx).apply {
