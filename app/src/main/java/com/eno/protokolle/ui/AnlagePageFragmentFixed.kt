@@ -33,6 +33,7 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
         val index = requireArguments().getInt(KEY_INDEX)
         val anlage = construct.anlagen.getOrNull(index) ?: return
         val pType = construct.pType
+        val isBma = pType.equals("BMA", ignoreCase = true)
 
         val container = view.findViewById<FixedHeaderTableContainer>(R.id.tableContainer)
 
@@ -44,11 +45,24 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
         }
 
         // Breiten-Regeln (in "Zeichen" = colWidths-Hints)
-        fun melderColWidths(table: UiTable, cols: Int): List<Int>? =
-            table.colWidths ?: ColumnWidthDefinitions.melderWidths(pType, cols)
+        fun resolveColWidths(table: UiTable, cols: Int, fallback: List<Int>?): List<Int>? {
+            val base = table.colWidths
+            if (base == null || base.isEmpty()) return fallback
+            if (base.size >= cols) return base.take(cols)
+            val pad = fallback?.drop(base.size)
+                ?: List(cols - base.size) { base.lastOrNull() ?: 3 }
+            return base + pad
+        }
 
-        fun hardwareColWidths(table: UiTable, cols: Int): List<Int>? =
-            table.colWidths ?: ColumnWidthDefinitions.hardwareWidths(pType, cols)
+        fun melderColWidths(table: UiTable, cols: Int): List<Int>? {
+            val fallback = ColumnWidthDefinitions.melderWidths(pType, cols)
+            return if (isBma) fallback else resolveColWidths(table, cols, fallback)
+        }
+
+        fun hardwareColWidths(table: UiTable, cols: Int): List<Int>? {
+            val fallback = ColumnWidthDefinitions.hardwareWidths(pType, cols)
+            return if (isBma) fallback else resolveColWidths(table, cols, fallback)
+        }
 
         val renderer = MultiSectionFixedTable(
             requireContext(),
