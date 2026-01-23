@@ -9,6 +9,7 @@ import androidx.core.os.bundleOf
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import com.eno.protokolle.R
+import com.eno.protokolle.newmodel.ColumnWidthDefinitions
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableContainer
 import com.github.zardozz.FixedHeaderTableLayout.FixedHeaderTableLayout
 import com.eno.protokolle.newmodel.UiTable
@@ -31,6 +32,7 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
         val construct = vm.construct ?: return
         val index = requireArguments().getInt(KEY_INDEX)
         val anlage = construct.anlagen.getOrNull(index) ?: return
+        val pType = construct.pType
 
         val container = view.findViewById<FixedHeaderTableContainer>(R.id.tableContainer)
 
@@ -42,17 +44,11 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
         }
 
         // Breiten-Regeln (in "Zeichen" = colWidths-Hints)
-        fun melderColWidths(cols: Int): List<Int> =
-            List(cols) { c ->
-                when (c) {
-                    0 -> 18   // Spalte 1: groß/fest (z.B. für "Meldertyp")
-                    1 -> 14   // Spalte 2: groß/fest
-                    else -> 3 // rest: 3 Zeichen
-                }
-            }
+        fun melderColWidths(table: UiTable, cols: Int): List<Int>? =
+            table.colWidths ?: ColumnWidthDefinitions.melderWidths(pType, cols)
 
-        fun hardwareColWidths(cols: Int): List<Int> =
-            List(cols) { 10 } // jede Spalte ~10 Zeichen
+        fun hardwareColWidths(table: UiTable, cols: Int): List<Int>? =
+            table.colWidths ?: ColumnWidthDefinitions.hardwareWidths(pType, cols)
 
         val renderer = MultiSectionFixedTable(
             requireContext(),
@@ -69,7 +65,7 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
         }
 
         val melderCols = colCountOf(anlage.melder)
-        val melderUi = anlage.melder.copy(colWidths = melderColWidths(melderCols))
+        val melderUi = anlage.melder.copy(colWidths = melderColWidths(anlage.melder, melderCols))
 
         container.addSubTable(melderTable)
         renderer.renderInto(melderTable, listOf(UiTableSection(null, melderUi)))
@@ -82,7 +78,7 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
             }
 
             val hwCols = colCountOf(hw)
-            val hwUi = hw.copy(colWidths = hardwareColWidths(hwCols))
+            val hwUi = hw.copy(colWidths = hardwareColWidths(hw, hwCols))
 
             container.addSubTable(hardwareTable)
             renderer.renderInto(hardwareTable, listOf(UiTableSection(null, hwUi)))

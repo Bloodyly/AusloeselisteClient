@@ -8,8 +8,8 @@ object ColumnWidthDefinitions {
 
     private val melder = mapOf(
         "BMA" to TableWidthDefinition(
-            defaultChars = 2,
-            overrides = mapOf(0 to 4, 1 to 2, 2 to 6)
+            defaultChars = 3,
+            overrides = mapOf(0 to 6, 1 to 6, 2 to 6)
         ),
         "EMA" to TableWidthDefinition(
             defaultChars = 3,
@@ -31,8 +31,7 @@ object ColumnWidthDefinitions {
 
     private val hardware = mapOf(
         "BMA" to TableWidthDefinition(
-            defaultChars = 3,
-            overrides = mapOf(0 to 6, 1 to 4)
+            defaultChars = 6
         ),
         "EMA" to TableWidthDefinition(
             defaultChars = 3,

@@ -16,10 +16,10 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // Auch hier ggf. JitPack
-        maven(url = "https://jitpack.io")
     }
 }
 
 rootProject.name = "BMA Auslöseprotokolle"
 include(":app")
+include(":fixedheadertablelayout")
+project(":fixedheadertablelayout").projectDir = file("FixedHeaderTableLayout/fixedheadertablelayout")
