@@ -134,6 +134,26 @@ public class FixedHeaderTableContainer extends ViewGroup {
     }
 
     /**
+     * Scales the shared viewport so the widest table fills the available container width.
+     * This is useful when the content is narrower than the screen but should expand to fit.
+     */
+    public void scaleToFitWidth() {
+        updateContentBounds();
+        float availableWidth = getWidth() - getPaddingLeft() - getPaddingRight();
+        if (availableWidth <= 0f || contentWidth <= 0f) {
+            return;
+        }
+        float targetScale = availableWidth / contentWidth;
+        if (targetScale < minScale) {
+            minScale = targetScale;
+        }
+        if (targetScale > maxScale) {
+            maxScale = targetScale;
+        }
+        updateViewport(0f, 0f, targetScale);
+    }
+
+    /**
      * Configure the height of the divider placed between stacked tables.
      */
     public void setDividerHeightPx(int dividerHeightPx) {

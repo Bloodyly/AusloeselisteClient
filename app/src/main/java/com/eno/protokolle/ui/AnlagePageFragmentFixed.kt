@@ -97,5 +97,9 @@ class AnlagePageFragmentFixed : Fragment(R.layout.frag_anlage_page_fixed) {
             container.addSubTable(hardwareTable)
             renderer.renderInto(hardwareTable, listOf(UiTableSection(null, hwUi)))
         }
+
+        container.post {
+            container.scaleToFitWidth()
+        }
     }
 }
