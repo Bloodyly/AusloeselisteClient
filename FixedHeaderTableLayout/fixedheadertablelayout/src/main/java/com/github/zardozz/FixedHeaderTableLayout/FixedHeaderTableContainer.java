@@ -104,7 +104,7 @@ public class FixedHeaderTableContainer extends ViewGroup {
         tableLayout.setUseExternalViewport(true);
         applyViewport(tableLayout);
         subtables.add(tableLayout);
-        addView(tableLayout, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        addView(tableLayout, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         updateContentBounds();
         clampPan();
         applyViewportToChildren();
@@ -131,6 +131,26 @@ public class FixedHeaderTableContainer extends ViewGroup {
      */
     public void setMaxScale(float maxScale) {
         this.maxScale = maxScale;
+    }
+
+    /**
+     * Scales the shared viewport so the widest table fills the available container width.
+     * This is useful when the content is narrower than the screen but should expand to fit.
+     */
+    public void scaleToFitWidth() {
+        updateContentBounds();
+        float availableWidth = getWidth() - getPaddingLeft() - getPaddingRight();
+        if (availableWidth <= 0f || contentWidth <= 0f) {
+            return;
+        }
+        float targetScale = availableWidth / contentWidth;
+        if (targetScale < minScale) {
+            minScale = targetScale;
+        }
+        if (targetScale > maxScale) {
+            maxScale = targetScale;
+        }
+        updateViewport(0f, 0f, targetScale);
     }
 
     /**
