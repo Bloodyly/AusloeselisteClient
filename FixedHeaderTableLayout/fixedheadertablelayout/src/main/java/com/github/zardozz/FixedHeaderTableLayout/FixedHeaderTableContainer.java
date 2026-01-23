@@ -104,7 +104,7 @@ public class FixedHeaderTableContainer extends ViewGroup {
         tableLayout.setUseExternalViewport(true);
         applyViewport(tableLayout);
         subtables.add(tableLayout);
-        addView(tableLayout, new LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT));
+        addView(tableLayout, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
         updateContentBounds();
         clampPan();
         applyViewportToChildren();
